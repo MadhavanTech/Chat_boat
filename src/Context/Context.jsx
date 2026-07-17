@@ -14,6 +14,12 @@ const Context = ({ children }) => {
     const [allrequesttext,setallrequsttext] = useState([])
     const [allresponsetext,setallresponsetext] = useState([])
 
+    console.log("request: " + reRequestText);
+    console.log("all requests: " + allrequesttext);
+    console.log("all responses: " + allresponsetext);
+    console.log("response: " + responceText);
+    console.log("request sound: " + requstSound);
+
   return (
 
     <Appcontext.Provider 

@@ -2,45 +2,65 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 
-if (!API_KEY) {
-    console.error('VITE_GEMINI_API_KEY is not set. Please add it to your .env file');
+let genAI = null;
+let model = null;
+let cooldownUntil = 0;
+
+function isRateLimited(error) {
+  const message = error?.message || "";
+  return (
+    error?.status === 429 ||
+    message.includes("429") ||
+    message.includes("quota") ||
+    message.includes("rate limit")
+  );
 }
 
-const genAI = new GoogleGenerativeAI(API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-3.5-flash" });
+function getModel() {
+  if (!API_KEY) {
+    throw new Error(
+      "Gemini API key is missing. Add VITE_GEMINI_API_KEY to your .env file."
+    );
+  }
 
-const MAX_RETRIES = 3;
-const INITIAL_DELAY = 1000; // 1 second
+  if (!genAI) {
+    genAI = new GoogleGenerativeAI(API_KEY);
+  }
+
+  if (!model) {
+    model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+  }
+
+  return model;
+}
 
 export async function askchatboat(question) {
-    if (!API_KEY) {
-        throw new Error('API key not configured. Please set VITE_GEMINI_API_KEY in your .env file');
+  if (!question || typeof question !== "string" || !question.trim()) {
+    throw new Error("A non-empty question string is required.");
+  }
+
+  if (Date.now() < cooldownUntil) {
+    const secondsLeft = Math.ceil((cooldownUntil - Date.now()) / 1000);
+    return `Gemini is temporarily rate-limited. Please wait ${secondsLeft}s and try again.`;
+  }
+
+  try {
+    const activeModel = getModel();
+    const result = await activeModel.generateContent(question);
+    const text = result.response.text();
+
+    if (!text) {
+      throw new Error("Empty response from Gemini.");
     }
-    
-    let lastError;
-    
-    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
-        try {
-            const result = await model.generateContent(question);
-            return result.response.text();
-        } catch (error) {
-            lastError = error;
-            
-            // Check if it's a 503 error (service unavailable)
-            if (error.status === 503 || error.message?.includes("503")) {
-                if (attempt < MAX_RETRIES - 1) {
-                    // Calculate exponential backoff delay
-                    const delay = INITIAL_DELAY * Math.pow(2, attempt);
-                    console.warn(`API unavailable (attempt ${attempt + 1}/${MAX_RETRIES}). Retrying in ${delay}ms...`);
-                    await new Promise(resolve => setTimeout(resolve, delay));
-                    continue;
-                }
-            }
-            
-            // For other errors, throw immediately
-            throw error;
-        }
+
+    return text;
+  } catch (error) {
+    if (isRateLimited(error)) {
+      cooldownUntil = Date.now() + 60000;
+      return "Gemini is temporarily rate-limited. Please wait a moment and try again.";
     }
-    
-    throw new Error(`Failed to get response after ${MAX_RETRIES} attempts: ${lastError.message}`);
+
+    const message = error?.message || "Unknown Gemini error";
+    throw new Error(`Gemini error: ${message}`);
+  }
 }

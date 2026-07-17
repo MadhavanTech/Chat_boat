@@ -1,54 +1,64 @@
-import React, { useContext } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import { Appcontext } from '../Context/Context';
 
 const Chat_Hry = () => {
+    const { allrequesttext, allresponsetext } = useContext(Appcontext);
+    const [historyItems, setHistoryItems] = useState([]);
 
-    const {allrequesttext, allresponsetext} =useContext(Appcontext);
-
-    const preevicesrequsttext = [];
-    const preevicesresponsetext = [];
-
-     class Hry {
-
-        constructor(reRequestText,responceText) {
-            this.reRequestText = reRequestText;
-            this.responceText = responceText;
+    useEffect(() => {
+        try {
+            const stored = localStorage.getItem('hry');
+            if (stored) {
+                const parsed = JSON.parse(stored);
+                if (Array.isArray(parsed)) {
+                    setHistoryItems(parsed);
+                    
+                }
+            }
+        } catch (error) {
+            console.error('Failed to load history:', error);
         }
-    }
+    }, []);
 
-    window.addEventListener('beforeunload', () => {
-        const hry = new Hry(allrequesttext,allresponsetext);
-        localStorage.setItem('hry', JSON.stringify(hry));
-    });
+    useEffect(() => {
+        if (allrequesttext.length === 0 && allresponsetext.length === 0) return;
 
-    window.addEventListener('load', () => {
-        const hry = JSON.parse(localStorage.getItem('hry'));
-        if (hry) {
-            preevicesrequsttext.push(hry.reRequestText);
-            console.log("Previous Request:", preevicesrequsttext);
-            
-            preevicesresponsetext.push(hry.responceText);
-            console.log("Previous Response:", preevicesresponsetext);
-        }
-    });
+        const history = allrequesttext.reduce((acc, req, index) => {
+            const response = allresponsetext[index] || '';
+            if (!req && !response) return acc;
+            acc.push({ request: req, response });
+            return acc;
+        }, []);
 
-  return (
-    <div>
-        <h3>Chat History</h3>
-        <ul>
-            {preevicesrequsttext.map((text, index) => (
-                <li key={index}>
-                    <strong>Request:</strong> {text}
-                </li>
+        localStorage.setItem('hry', JSON.stringify(history));
+        setHistoryItems(history);
+    }, [allrequesttext, allresponsetext]);
+
+    return (
+        <div className='chat-container flex h-full w-full flex-col gap-4 overflow-y-auto p-4'>
+            <div className='history-header mb-4 text-center text-lg font-semibold text-gray-700'>
+                Chat History
+            </div>
+
+            {historyItems.length === 0 && (
+                <div className='text-sm text-gray-400'>No saved chat history yet.</div>
+            )}
+
+            {historyItems.map((item, index) => (
+                <div key={`${item.request}-${index}`} className='message-pair flex flex-col gap-2'>
+                    <div className='user-message self-end rounded-lg bg-blue-100 px-4 py-2 text-blue-900 max-w-[80%]'>
+                        {item.request}
+                    </div>
+
+                    {item.response && (
+                        <div className='bot-message self-start max-w-[80%] whitespace-pre-wrap rounded-lg bg-gray-100 px-4 py-3 text-gray-900'>
+                            {item.response}
+                        </div>
+                    )}
+                </div>
             ))}
-            {preevicesresponsetext.map((text, index) => (
-                <li key={index}>
-                    <strong>Response:</strong> {text}
-                </li>
-            ))}
-        </ul>
-    </div>
-  )
+        </div>
+    )
 }
 
 export default Chat_Hry

@@ -1,27 +1,35 @@
-import React, { useContext } from 'react'
+import React, { useContext, useEffect } from 'react'
 import { Appcontext } from '../Context/Context'
 
 const Tts = () => {
   const { responceText } = useContext(Appcontext)
 
-  const renderMessages = () => {
-    if (!responceText) return <p>No response yet.</p>
+  useEffect(() => {
+    if (!responceText) return;
 
-    if (Array.isArray(responceText)) {
-      return responceText.length > 0
-        ? responceText.map((item, index) => <p key={index}>{item}</p>)
-        : <p>No response yet.</p>
+    const textToSpeak = Array.isArray(responceText)
+      ? responceText.join(' ').trim()
+      : String(responceText).trim();
+
+    if (!textToSpeak) return;
+
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
+      console.warn('Speech synthesis is not supported in this browser.');
+      return;
     }
 
-    return <p>{responceText}</p>
-  }
+    window.speechSynthesis.cancel();
 
-  return (
-    <div>
-      <h3>Response</h3>
-      {renderMessages()}
-    </div>
-  )
+    const utterance = new SpeechSynthesisUtterance(textToSpeak);
+    utterance.lang = 'en-US';
+    utterance.rate = 1;
+    utterance.pitch = 1;
+    utterance.volume = 1;
+
+    window.speechSynthesis.speak(utterance);
+  }, [responceText])
+
+  return null;
 }
 
 export default Tts
