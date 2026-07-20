@@ -1,9 +1,5 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+const WORKER_URL = import.meta.env.VITE_GEMINI_WORKER_URL?.trim() || "https://white-limit-4511.madhavanmunusamy09.workers.dev/";
 
-const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-
-let genAI = null;
-let model = null;
 let cooldownUntil = 0;
 
 function isRateLimited(error) {
@@ -12,26 +8,9 @@ function isRateLimited(error) {
     error?.status === 429 ||
     message.includes("429") ||
     message.includes("quota") ||
-    message.includes("rate limit")
+    message.includes("rate limit") ||
+    message.includes("RESOURCE_EXHAUSTED")
   );
-}
-
-function getModel() {
-  if (!API_KEY) {
-    throw new Error(
-      "Gemini API key is missing. Add VITE_GEMINI_API_KEY to your .env file."
-    );
-  }
-
-  if (!genAI) {
-    genAI = new GoogleGenerativeAI(API_KEY);
-  }
-
-  if (!model) {
-    model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
-  }
-
-  return model;
 }
 
 export async function askchatboat(question) {
@@ -41,26 +20,39 @@ export async function askchatboat(question) {
 
   if (Date.now() < cooldownUntil) {
     const secondsLeft = Math.ceil((cooldownUntil - Date.now()) / 1000);
-    return `Gemini is temporarily rate-limited. Please wait ${secondsLeft}s and try again.`;
+    throw new Error(`Gemini is temporarily rate-limited. Please wait ${secondsLeft}s and try again.`);
   }
 
   try {
-    const activeModel = getModel();
-    const result = await activeModel.generateContent(question);
-    const text = result.response.text();
+    const response = await fetch(WORKER_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ question }),
+    });
+
+    if (!response.ok) {
+      const errorBody = await response.text();
+      const error = new Error(errorBody || "The worker returned an error.");
+      error.status = response.status;
+      throw error;
+    }
+
+    const data = await response.json();
+    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
 
     if (!text) {
-      throw new Error("Empty response from Gemini.");
+      throw new Error("Empty response from Gemini worker.");
     }
 
     return text;
   } catch (error) {
     if (isRateLimited(error)) {
       cooldownUntil = Date.now() + 60000;
-      return "Gemini is temporarily rate-limited. Please wait a moment and try again.";
+      throw new Error("Gemini is temporarily rate-limited. Please wait a moment and try again.");
     }
 
-    const message = error?.message || "Unknown Gemini error";
-    throw new Error(`Gemini error: ${message}`);
+    throw new Error(`Gemini is unavailable right now. Please try again in a moment. Details: ${error.message}`);
   }
 }
