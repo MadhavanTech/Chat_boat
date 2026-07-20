@@ -2,7 +2,7 @@
   "name": "chat_boat",
   "private": true,
   "version": "0.0.0",
-  "homepage": "https://madhavanmunusamy09.github.io/Chat_boat/",  
+  "homepage": "https://madhavanmunusamy09.github.io/Chat_boat/",
   "type": "module",
   "scripts": {
     "dev": "vite",
