@@ -257,6 +257,19 @@ body::before {
   .chat-surface {
     padding: 16px;
   }
+
+  #chat {
+    overflow: visible;
+    max-height: none;
+    -webkit-overflow-scrolling: auto;
+  }
+
+  /* ensure the inner chat content is constrained and scrolls on mobile */
+  #chat .chat-container {
+    max-height: calc(100vh - 14rem);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
 #chat_boat {
