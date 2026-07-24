@@ -32,9 +32,48 @@ const ChatBoat = () => {
         setallrequsttext((prev) => (prev[prev.length - 1] === reRequestText ? prev : [...prev, reRequestText]));
 
         const prompt = `Answer this question clearly and briefly: ${reRequestText}`;
-        const responce = await askchatboat(prompt);
+
+        function Ownarbio(request) {
+          if (!request || typeof request !== 'string') return request;
+
+          const req = request.toLowerCase();
+          const mentionsMaddy = req.includes("maddy") && req.includes("ownar");
+          const asksForBio = req.includes("bio") || req.includes("biography") || req.includes("background");
+          const asksAbout = req.includes("about");
+
+          const pernalperson = (req.includes("sha")|| req.includes("thangapulla")||req.includes("shakthi")) && req.includes("name");
+
+          if ((mentionsMaddy && asksForBio) || asksAbout) {
+            return `About Madhavan:
+
+                     Madhavan is a dedicated Java Full Stack Developer with hands-on expertise in building robust, scalable web applications. Skilled in backend technologies such as Java, J2EE, Spring, Spring Boot, Hibernate, and JDBC, he brings strong problem-solving abilities to designing efficient server-side logic and RESTful APIs. On the database side, he works confidently with SQL and MySQL to manage and optimize data-driven applications. On the frontend, Madhavan crafts clean, responsive user interfaces using HTML, CSS, JavaScript, Tailwind CSS, and React. Combining a solid grasp of both frontend and backend development, he is passionate about delivering end-to-end solutions that are functional, maintainable, and user-friendly.
+
+                    About Maddy Chatbot:
+
+                     Maddy is a highly skilled and innovative AI voice assistant developed by Ownar. It is designed to understand natural language and provide accurate, context-aware responses to user queries. Maddy leverages advanced machine learning algorithms and state-of-the-art natural language processing techniques to deliver a seamless conversational experience. With its ability to learn and adapt over time, Maddy continues to improve its performance, making it an invaluable tool for users seeking information, assistance, or engaging interactions.`;
+          }else if (pernalperson) {
+            return `About Thangapulla💖:
+
+                   Just wanted to say — you crossed my mind today, like you always do, and it made me smile without even trying. I don't need a reason to tell you this: being with you is the best part of my ordinary days. You make simple moments feel like something worth remembering. I love you, just because you're you. ❤️
+                    
+                   `
+
+          }
+
+          return '';
+        }
+
+        let responce1 = Ownarbio(reRequestText);
+
+        let responce = responce1.length > 0 ? responce1 : await askchatboat(prompt);
 
         if (responce && responce.length > 0) {
+
+          responce = RemoveGemininame(responce);
+
+          responce = RemoveGoogle(responce);
+
+
           setresponceText(responce);
           setallresponsetext((prev) => {
             if (prev[prev.length - 1] === responce) {
@@ -44,11 +83,22 @@ const ChatBoat = () => {
           });
         }
 
+        function RemoveGemininame(requst) {
+          if (!requst || typeof requst !== 'string') return requst;
+          return requst.replace(/gemini/gi, 'maddy_Chatboat');
+        }
+
+        function RemoveGoogle(requst) {
+          if (!requst || typeof requst !== 'string') return requst;
+          return requst.replace(/google/gi, 'maddy');
+        }
+
+
         setRequestText('');
       } catch (err) {
         const errorMessage = err?.message || 'Failed to get response. Please try again.';
         setError(errorMessage);
-        console.error('Gemini error:', err);
+        console.error('maddy_Chatboat error:', err);
       } finally {
         setIsLoading(false);
         isProcessingRef.current = false;

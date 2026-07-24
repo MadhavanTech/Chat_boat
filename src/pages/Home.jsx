@@ -45,7 +45,7 @@ const Home = () => {
             </div>
 
             {/* Right column - Live experience panel */}
-            <div className='min-h-[320px] rounded-[24px] border border-white/15 bg-slate-900/70 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] sm:min-h-[420px] sm:p-4 lg:h-[calc(100vh-6rem)] lg:p-6'>
+            <div id='chat' className='min-h-[320px] rounded-[24px] border border-white/15 bg-slate-900/70 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] sm:min-h-[420px] sm:p-4 lg:h-[calc(100vh-6rem)] lg:p-6' >
                
               {showHistory ? <Chat_Hry /> : <ChatBoat />}
               

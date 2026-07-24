@@ -1,4 +1,4 @@
-const WORKER_URL = import.meta.env.VITE_GEMINI_WORKER_URL?.trim() || "https://white-limit-4511.madhavanmunusamy09.workers.dev/";
+const WORKER_URL = import.meta.env.VITE_MADDY_CHATBOAT_WORKER_URL?.trim() || "https://white-limit-4511.madhavanmunusamy09.workers.dev/";
 
 let cooldownUntil = 0;
 
@@ -20,7 +20,7 @@ export async function askchatboat(question) {
 
   if (Date.now() < cooldownUntil) {
     const secondsLeft = Math.ceil((cooldownUntil - Date.now()) / 1000);
-    throw new Error(`Gemini is temporarily rate-limited. Please wait ${secondsLeft}s and try again.`);
+    throw new Error(`maddy_Chatboat is temporarily rate-limited. Please wait ${secondsLeft}s and try again.`);
   }
 
   try {
@@ -43,16 +43,16 @@ export async function askchatboat(question) {
     const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
 
     if (!text) {
-      throw new Error("Empty response from Gemini worker.");
+      throw new Error("Empty response from maddy_Chatboat worker.");
     }
 
     return text;
   } catch (error) {
     if (isRateLimited(error)) {
       cooldownUntil = Date.now() + 60000;
-      throw new Error("Gemini is temporarily rate-limited. Please wait a moment and try again.");
+      throw new Error("maddy_Chatboat is temporarily rate-limited. Please wait a moment and try again.");
     }
 
-    throw new Error(`Gemini is unavailable right now. Please try again in a moment. Details: ${error.message}`);
+    throw new Error(`maddy_Chatboat is unavailable right now. Please try again in a moment. Details: ${error.message}`);
   }
 }

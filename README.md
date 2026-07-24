@@ -1,10 +1,10 @@
 # Chat Boat 🚀
 
-A React-based chatbot application powered by Google's Gemini AI API with support for text-to-speech and speech-to-text capabilities.
+A React-based chatbot application powered by maddy_Chatboat AI with support for text-to-speech and speech-to-text capabilities.
 
 ## Features
 
-- 💬 Chat with AI powered by Google Gemini
+- 💬 Chat with AI powered by maddy_Chatboat
 - 🎤 Speech-to-Text (STT) - Speak your questions
 - 🔊 Text-to-Speech (TTS) - Hear AI responses
 - 🔄 Automatic retry logic for API failures
@@ -15,7 +15,7 @@ A React-based chatbot application powered by Google's Gemini AI API with support
 
 - Node.js 18+ 
 - npm or yarn
-- Google Gemini API Key ([Get one here](https://aistudio.google.com/app/apikey))
+- maddy_Chatboat API Key ([Get one here](https://aistudio.google.com/app/apikey))
 
 ## Setup
 
@@ -36,9 +36,9 @@ A React-based chatbot application powered by Google's Gemini AI API with support
    ```
 
 4. **Add your API Key**
-   Open `.env` and add your Gemini API key:
+   Open `.env` and add your maddy_Chatboat API key:
    ```
-   VITE_GEMINI_API_KEY=your_actual_api_key_here
+   VITE_MADDY_CHATBOAT_API_KEY=your_actual_api_key_here
    ```
 
 ## Development
