@@ -115,7 +115,7 @@ const ChatBoat = () => {
     GerateResponce();
   }, [reRequestText, setRequestText, setallrequsttext, setresponceText, setallresponsetext]);
 
-  return (
+return (
     <div className='chat-container flex h-full w-full flex-col gap-4 overflow-y-auto p-4'>
       {allrequesttext.map((req, index) => (
         <div key={`${req}-${index}`} className='message-pair flex flex-col gap-2'>
@@ -133,10 +133,6 @@ const ChatBoat = () => {
 
       {isLoading && (
         <div className='self-start italic text-gray-500'>Thinking...</div>
-      )}
-
-      {error && (
-        <div className='self-start text-red-500'>{error}</div>
       )}
 
       <div className='sr-only' aria-hidden='true'>
