@@ -96,10 +96,17 @@ const ChatBoat = () => {
 
         setRequestText('');
       } catch (err) {
-        const errorMessage = err?.message || 'Failed to get response. Please try again.';
-        setError(errorMessage);
-        console.error('maddy_Chatboat error:', err);
-      } finally {
+  let errorMessage = err?.message || 'Failed to get response. Please try again.';
+  errorMessage = errorMessage.replace(/gemini/gi, 'maddy_Chatboat').replace(/google/gi, 'maddy');
+  console.error('maddy_Chatboat error:', err);
+
+  setresponceText(errorMessage);
+  setallresponsetext((prev) =>
+    prev[prev.length - 1] === errorMessage ? prev : [...prev, errorMessage]
+  );
+
+  setRequestText('');
+}  finally {
         setIsLoading(false);
         isProcessingRef.current = false;
       }
