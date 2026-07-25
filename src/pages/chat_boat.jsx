@@ -16,7 +16,7 @@ const ChatBoat = () => {
   } = useContext(Appcontext);
 
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
+  
   const isProcessingRef = useRef(false);
 
   useEffect(() => {
@@ -27,8 +27,7 @@ const ChatBoat = () => {
 
       try {
         setIsLoading(true);
-        setError(null);
-
+        
         setallrequsttext((prev) => (prev[prev.length - 1] === reRequestText ? prev : [...prev, reRequestText]));
 
         const prompt = `Answer this question clearly and briefly: ${reRequestText}`;
