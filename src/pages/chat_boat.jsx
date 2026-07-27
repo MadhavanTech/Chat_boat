@@ -2,6 +2,7 @@ import React, { useContext, useEffect, useRef, useState } from 'react'
 import Tts from './tts'
 import { Appcontext } from '../Context/Context'
 import { askchatboat } from '../Chat_boat_Responce'
+import { sanitizeResponseText } from '../utils/responseSanitizer'
 
 const ChatBoat = () => {
   const {
@@ -16,7 +17,6 @@ const ChatBoat = () => {
   } = useContext(Appcontext);
 
   const [isLoading, setIsLoading] = useState(false);
-
   const isProcessingRef = useRef(false);
 
   useEffect(() => {
@@ -30,60 +30,21 @@ const ChatBoat = () => {
 
         setallrequsttext((prev) => (prev[prev.length - 1] === reRequestText ? prev : [...prev, reRequestText]));
 
-        const prompt = `Answer this question clearly and briefly: ${reRequestText}`;
+        const prompt = reRequestText;
 
-        function Ownarbio(request) {
-          if (!request || typeof request !== 'string') return '';
-
-          const req = request.toLowerCase().trim();
-
-          // Helper: whole-word match instead of loose substring match
-          const hasWord = (text, word) => new RegExp(`\\b${word}\\b`, 'i').test(text);
-
-          const mentionsMaddy = hasWord(req, 'maddy') && hasWord(req, 'ownar');
-          const asksForBio = hasWord(req, 'bio') || hasWord(req, 'biography') || hasWord(req, 'background');
-          const asksAboutMadhavan = hasWord(req, 'about') && (hasWord(req, 'madhavan') || mentionsMaddy);
-
-          const mentionsPersonalName =
-            hasWord(req, 'shakthi') ||
-            hasWord(req, 'shakti') ||
-            hasWord(req, 'thangapulla') ||
-            (hasWord(req, 'thanga') && hasWord(req, 'pulla')); // handles "Thanga Pulla" as two words
-
-          const mentionsNameKeyword = hasWord(req, 'name') || hasWord(req, 'im') || hasWord(req, "i'm");
-
-          const isPersonalMessage = mentionsPersonalName && mentionsNameKeyword;
-
-          // Priority: personal message check FIRST so it isn't shadowed by generic "about" bio
-          if (isPersonalMessage) {
-            return `About Thangapulla💖:
-
-Just wanted to say — you crossed my mind today, like you always do, and it made me smile without even trying. I don't need a reason to tell you this: being with you is the best part of my ordinary days. You make simple moments feel like something worth remembering. I love you, just because you're you. ❤️`;
+        async function MeaningfulResponse() {
+          try {
+            return await askchatboat(prompt);
+          } catch (error) {
+            const cleanedError = sanitizeResponseText(error?.message || error || 'Unknown error');
+            return `maddy_Chatboat is temporarily unavailable. Please try again later. Error: ${cleanedError}`;
           }
-
-          if ((mentionsMaddy && asksForBio) || asksAboutMadhavan) {
-            return `About Madhavan:
-
-Madhavan is a dedicated Java Full Stack Developer with hands-on expertise in building robust, scalable web applications. Skilled in backend technologies such as Java, J2EE, Spring, Spring Boot, Hibernate, and JDBC, he brings strong problem-solving abilities to designing efficient server-side logic and RESTful APIs. On the database side, he works confidently with SQL and MySQL to manage and optimize data-driven applications. On the frontend, Madhavan crafts clean, responsive user interfaces using HTML, CSS, JavaScript, Tailwind CSS, and React. Combining a solid grasp of both frontend and backend development, he is passionate about delivering end-to-end solutions that are functional, maintainable, and user-friendly.
-
-About Maddy Chatbot:
-
-Maddy is a highly skilled and innovative AI voice assistant developed by Ownar. It is designed to understand natural language and provide accurate, context-aware responses to user queries. Maddy leverages advanced machine learning algorithms and state-of-the-art natural language processing techniques to deliver a seamless conversational experience. With its ability to learn and adapt over time, Maddy continues to improve its performance, making it an invaluable tool for users seeking information, assistance, or engaging interactions.`;
-          }
-
-          return '';
         }
 
-        let responce1 = Ownarbio(reRequestText);
+        let responce = await MeaningfulResponse();
 
-        let responce = responce1.length > 0 ? responce1 : await askchatboat(prompt);
-
-        if (responce && responce.length > 0) {
-
-          responce = RemoveGemininame(responce);
-
-          responce = RemoveGoogle(responce);
-
+        if (responce.length > 0) {
+          responce = sanitizeResponseText(responce);
 
           setresponceText(responce);
           setallresponsetext((prev) => {
@@ -94,29 +55,16 @@ Maddy is a highly skilled and innovative AI voice assistant developed by Ownar. 
           });
         }
 
-        function RemoveGemininame(requst) {
-          if (!requst || typeof requst !== 'string') return requst;
-          return requst.replace(/gemini/gi, 'maddy_Chatboat');
-        }
-
-        function RemoveGoogle(requst) {
-          if (!requst || typeof requst !== 'string') return requst;
-          return requst.replace(/google/gi, 'maddy');
-        }
-
-
         setRequestText('');
       } catch (err) {
-        let errorMessage = err?.message || 'Failed to get response. Please try again.';
-        errorMessage = errorMessage.replace(/gemini/gi, 'maddy_Chatboat').replace(/google/gi, 'maddy');
+        const errorMessage = sanitizeResponseText(err?.message || 'Failed to get response. Please try again.');
+        const finalError = `maddy_Chatboat is temporarily unavailable. Please try again later. Error: ${errorMessage}`;
+        setresponceText(finalError);
+        setallresponsetext((prev) => {
+          if (prev[prev.length - 1] === finalError) return prev;
+          return [...prev, finalError];
+        });
         console.error('maddy_Chatboat error:', err);
-
-        setresponceText(errorMessage);
-        setallresponsetext((prev) =>
-          prev[prev.length - 1] === errorMessage ? prev : [...prev, errorMessage]
-        );
-
-        setRequestText('');
       } finally {
         setIsLoading(false);
         isProcessingRef.current = false;
